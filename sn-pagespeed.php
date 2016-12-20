@@ -24,7 +24,7 @@ class sn_pagespeed {
       
       require_once 'html-minify.php';
       
-      if( is_page( ) || is_front_page() ) {
+      if( is_page( ) || is_front_page()|| is_single() || is_archive() ) {
         ob_start( array(sn_pagespeed,'buffer') );
       }
     });
