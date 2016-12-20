@@ -11,8 +11,8 @@
 
 ## Credits
 
-HTML Minify Library: https://github.com/stevenvachon/html-minify
-Remove WP Version from CSS/JS: https://www.virendrachandak.com/techtalk/how-to-remove-wordpress-version-parameter-from-js-and-css-files/
+* HTML Minify Library: https://github.com/stevenvachon/html-minify
+* Remove WP Version from CSS/JS: https://www.virendrachandak.com/techtalk/how-to-remove-wordpress-version-parameter-from-js-and-css-files/
 
 ## License
 
