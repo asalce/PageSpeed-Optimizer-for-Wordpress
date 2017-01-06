@@ -1,16 +1,17 @@
 <?php
 /*
 Plugin Name: PageSpeed Optimizer for Wordpress
-Plugin URI: https://www.sourcenest.com/
+Plugin URI: https://www.sourcenest.com/pagespeed-optimizer-plugin-for-wordpress/
 Description: PageSpeed Optimizer
 Author: SourceNEST, LLC.
-Version: 0.1
+Version: 0.2
 Author URI: https://www.sourcenest.com/
 */
 
 class sn_pagespeed {
   static function init(){
     
+    // TODO: This should be an Option to Activate or Deactive
     $f = function ( $src ) {
       if ( strpos( $src, 'ver=' . get_bloginfo( 'version' ) ) )
           $src = remove_query_arg( 'ver', $src );
@@ -20,12 +21,27 @@ class sn_pagespeed {
     add_filter( 'style_loader_src', $f, 9999 );
     add_filter( 'script_loader_src', $f, 9999 );
     
+    // REMOVE WP EMOJI
+    // TODO: This should be an Option to Activate or Deactive
+    remove_action('wp_head', 'print_emoji_detection_script', 7);
+    remove_action('wp_print_styles', 'print_emoji_styles');
+    
+    remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+    remove_action( 'admin_print_styles', 'print_emoji_styles' );
+    
+    // Remove Recent Comments Style
+    // TODO: This should be an Option to Activate or Deactive
+    add_action('widgets_init', function () {
+        global $wp_widget_factory;
+        remove_action('wp_head', array($wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style'));
+    });
+    
     add_action('template_redirect', function(){
       
       require_once 'html-minify.php';
       
       if( is_page( ) || is_front_page()|| is_single() || is_archive() ) {
-        ob_start( array(sn_pagespeed,'buffer') );
+        ob_start( array('sn_pagespeed','buffer') );
       }
     });
 
@@ -66,17 +82,15 @@ class sn_pagespeed {
 
     // move all JS to bottom
     $patterns = array(
-      'js'             => '#(\s*<!--(\[if[^\n]*>)?\s*(<script.*</script>)+\s*(<!\[endif\])?-->)|(\s*<script.*</script>)#isU',
+      'js'             => '#(<!(|--)\[[^\]]+\]>)?(<!-->)?\s*<script((?!<\/script>).)*<\/script>(\r*\n*[ ]*)?\s*((<!--)\s*(<!\[endif\](|--)>)|(<!\[endif\](|--)>))?#si',
       'document_end'   => '#</body>\s*</html>#isU'
     );
-    foreach($patterns as $pattern) {
+    foreach($patterns as $parrent_name => $pattern) {
       $matches = array();
       $success = preg_match_all($pattern, $buffer, $matches);
       if ($success) {
-        foreach($matches[0] as $text){
-          if(preg_match('/document.write/',$text)){
-  
-          } else {
+        foreach($matches[0] as $i => $text){
+          if(($parrent_name=='js' && !preg_match('/document.write|ld\+json/',$text)) || $parrent_name !='js'){
             $buffer = str_replace($text, '', $buffer);
             $buffer = $buffer . $text;
           }
@@ -88,4 +102,4 @@ class sn_pagespeed {
   }
 }
 
-sn_pagespeed::init();
+if(!is_admin()) sn_pagespeed::init();
